@@ -2,11 +2,7 @@ package org.zycong.fableCraft;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Locale;
-import java.util.Set;
+import java.util.*;
 import java.util.logging.Logger;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
@@ -173,7 +169,7 @@ public class yamlManager {
             List<String> lore = new ArrayList(List.of());
             int attributes = 0;
             if (isItemSet(name + ".hide")) {
-                for(String hide : (List)itemDB.get(name + ".hide")) {
+                for(Object hide : (List)itemDB.get(name + ".hide")) {
                     meta.addItemFlags(new ItemFlag[]{ItemFlag.valueOf("HIDE_" + hide)});
                 }
             }
@@ -224,8 +220,8 @@ public class yamlManager {
             }
 
             if (isItemSet(name + ".enchantments")) {
-                for(String enchantmentString : (List)itemDB.get(name + ".enchantments")) {
-                    String[] enchantString = enchantmentString.split(":");
+                for(Object enchantmentString : (List) Objects.requireNonNull(itemDB.get(name + ".enchantments"))) {
+                    String[] enchantString = enchantmentString.toString().split(":");
                     Enchantment enchantment = Enchantment.getByName(enchantString[0]);
                     meta.addEnchant(enchantment, Integer.valueOf(enchantString[1]), true);
                 }
@@ -288,8 +284,8 @@ public class yamlManager {
                     String[] shapes = (String[])shapeString.toArray(new String[shapeString.size()]);
                     recipe.shape(shapes);
 
-                    for(String s : (List)itemDB.get(name + ".recipe.ingredients")) {
-                        String[] splitIngredients = s.split(":", 2);
+                    for(Object s : (List)itemDB.get(name + ".recipe.ingredients")) {
+                        String[] splitIngredients = s.toString().split(":", 2);
                         recipe.setIngredient(splitIngredients[0].charAt(0), Material.getMaterial(splitIngredients[1]));
                     }
 
@@ -298,8 +294,8 @@ public class yamlManager {
                     NamespacedKey key = new NamespacedKey(FableCraft.getPlugin(), name);
                     ShapelessRecipe recipe = new ShapelessRecipe(key, item);
 
-                    for(String s : (List)itemDB.get(name + ".recipe.ingredients")) {
-                        String[] splitIngredients = s.split(":");
+                    for(Object s : (List)itemDB.get(name + ".recipe.ingredients")) {
+                        String[] splitIngredients = s.toString().split(":");
                         recipe.addIngredient(Integer.parseInt(splitIngredients[1]), Material.getMaterial(splitIngredients[0]));
                     }
 
