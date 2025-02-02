@@ -1,0 +1,13 @@
+name: FableCraft
+version: '1.0-SNAPSHOT'
+main: org.zycong.fableCraft.FableCraft
+api-version: '1.21'
+authors: [ zycong ]
+description: RPG style plugin.
+
+commands:
+  itemDB:
+    description: Manage the custom items in this server.
+    permission: FableCraft.itemDB
+    aliases:
+      - idb
