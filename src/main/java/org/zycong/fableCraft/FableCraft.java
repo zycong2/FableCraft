@@ -1,4 +1,3 @@
-
 package org.zycong.fableCraft;
 
 import java.util.Arrays;
@@ -15,31 +14,41 @@ import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitScheduler;
 import org.zycong.fableCraft.commands.itemDBCommand;
+import org.zycong.fableCraft.playerStats.resetStats;
+import org.zycong.fableCraft.playerStats.resetStatsTC;
 import org.zycong.fableCraft.playerStats.stats;
 
 public final class FableCraft extends JavaPlugin {
+    public static List<String> itemStats = List.of("Damage", "Health", "Mana", "Defence");
     public FableCraft() {
     }
 
-    public static Plugin getPlugin() {
-        Plugin p = Bukkit.getServer().getPluginManager().getPlugin("FableCraft");
-        return p;
-    }
+    public static Plugin getPlugin() { return Bukkit.getServer().getPluginManager().getPlugin("FableCraft"); }
 
     public void onEnable() {
+
         this.getCommand("itemDB").setExecutor(new itemDBCommand());
+        this.getCommand("resetStats").setExecutor(new resetStats());
+        this.getCommand("resetStats").setTabCompleter(new resetStatsTC());
+
         Bukkit.getPluginManager().registerEvents(new listeners(), getPlugin());
         BukkitScheduler scheduler = this.getServer().getScheduler();
         scheduler.scheduleSyncRepeatingTask(this, () -> {
             for(Player p : Bukkit.getOnlinePlayers()) {
                 p.sendActionBar(String.valueOf(yamlManager.getConfig("actionbar.message", p, true)));
                 double maxPlayerHealth = Double.parseDouble(stats.getPlayerPDC("Health", p));
-                double currentHealth = ((MetadataValue)p.getMetadata("currentHealth").getFirst()).asDouble();
+                double maxPlayerMana = Double.parseDouble(stats.getPlayerPDC("Mana", p));
+                double currentHealth = p.getMetadata("currentHealth").getFirst().asDouble();
+                double currentMana = p.getMetadata("currentHealth").getFirst().asDouble();
                 if (currentHealth < maxPlayerHealth) {
                     double amount = Double.parseDouble(stats.getPlayerPDC("Regeneration", p));
                     currentHealth += (double)20.0F / maxPlayerHealth * amount;
                     p.setMetadata("currentHealth", new FixedMetadataValue(getPlugin(), currentHealth));
                     p.setHealth((double)20.0F / maxPlayerHealth * currentHealth);
+                } if (currentMana < maxPlayerMana) {
+                    double amount = Double.parseDouble(stats.getPlayerPDC("ManaRegeneration", p));
+                    currentMana += (double)20.0F / maxPlayerMana * amount;
+                    p.setMetadata("currentMana", new FixedMetadataValue(getPlugin(), currentMana));
                 }
             }
 
@@ -48,13 +57,9 @@ public final class FableCraft extends JavaPlugin {
             Bukkit.getLogger().severe("Failed to load data!");
         }
 
-        if (yamlManager.getConfig("items.removeDefaultRecipes", (Player)null, false).equals(true)) {
-            Bukkit.clearRecipes();
-        } else {
-            Bukkit.resetRecipes();
-        }
+        if (yamlManager.getConfig("items.removeDefaultRecipes", null, false).equals(true)) {Bukkit.clearRecipes();} else {Bukkit.resetRecipes();}
+        yamlManager.getCustomItems();
 
-        List<ItemStack> items = yamlManager.getCustomItems();
     }
 
     public void onDisable() {

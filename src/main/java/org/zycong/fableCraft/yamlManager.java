@@ -20,8 +20,6 @@ import org.bukkit.inventory.ShapelessRecipe;
 import org.bukkit.inventory.meta.BookMeta;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.LeatherArmorMeta;
-import org.bukkit.metadata.MetadataValue;
-import org.bukkit.persistence.PersistentDataType;
 import org.zycong.fableCraft.playerStats.stats;
 
 public class yamlManager {
@@ -91,7 +89,10 @@ public class yamlManager {
         config.addDefault("messages.joinMessage", "&6#target# &ajoined the game!");
         config.addDefault("messages.firstJoinMessage", "&6#target# &ajoined the server for the first time!");
         config.addDefault("messages.quitMessage", "&6#target#&a left!");
+        config.addDefault("messages.error.noPermissionCraft", "&cYou don't have permission to make this item!");
         config.addDefault("messages.error.noPermission", "&cYou don't have permission to execute this command!");
+        config.addDefault("messages.error.noValidArgument", "&cInvalid arguments!");
+        config.addDefault("messages.info.resetSuccess", "&aSuccessfully reset the stats of #target#!");
         config.addDefault("items.unbreakable.enabled", true);
         config.addDefault("items.removeDefaultRecipes", true);
         config.addDefault("items.display.rarity.common", "&f&lCOMMON");
@@ -106,30 +107,34 @@ public class yamlManager {
         config.addDefault("stats.Health.char", "&c❤");
         config.addDefault("stats.Regeneration.default", 1);
         config.addDefault("stats.Regeneration.char", "&d\ud83d\udc9e");
-        config.addDefault("stats.Defense.default", 0);
-        config.addDefault("stats.Defence.char", "&7\ud83d\udee1️");
+        config.addDefault("stats.Defence.default", 0);
+        config.addDefault("stats.Defence.char", "&7\ud83d\udee1");
         config.addDefault("stats.Mana.default", 20);
         config.addDefault("stats.Mana.char", "&9ᛄ");
+        config.addDefault("stats.ManaRegeneration.default", 1);
+        config.addDefault("stats.ManaRegeneration.char", "&9\uD83C\uDF00");
         config.addDefault("stats.Damage.default", 1);
         config.addDefault("stats.Damage.char", "&4⚔");
-        config.addDefault("actionbar.message", "&c#currentHealth#/#maxHealth#❤");
+        config.addDefault("actionbar.message", "&c#currentHealth#/#maxHealth#❤&r   &9#currentMana#/#maxMana#ᛄ");
         config.options().copyDefaults(true);
         itemDB.addDefault("woodenSword.itemType", "WOODEN_SWORD");
         itemDB.addDefault("woodenSword.name", "just a sword");
         itemDB.addDefault("woodenSword.lore", List.of("Just a sword"));
         itemDB.addDefault("woodenSword.customModelData", 1);
         itemDB.addDefault("woodenSword.enchantments", List.of("mending:1", "fire_aspect:10"));
-        itemDB.addDefault("woodenSword.damage", 10);
+        itemDB.addDefault("woodenSword.Damage", 10);
         itemDB.addDefault("woodenSword.hide", List.of("ENCHANTS", "ATTRIBUTES", "DYE", "PLACED_ON", "DESTROYS", "ARMOR_TRIM"));
         itemDB.addDefault("woodenSword.group", "swords");
         itemDB.addDefault("woodenSword.rarity", "common");
         itemDB.addDefault("woodenSword.recipe.type", "shaped");
         itemDB.addDefault("woodenSword.recipe.shape", List.of("  W", " W ", "S  "));
         itemDB.addDefault("woodenSword.recipe.ingredients", List.of("W:OAK_PLANKS", "S:STICK"));
+        itemDB.addDefault("woodenSword.recipe.permission", "craft.wooden_sword");
+
         itemDB.addDefault("leatherChestplate.itemType", "LEATHER_CHESTPLATE");
-        itemDB.addDefault("leatherChestplate.health", 10);
-        itemDB.addDefault("leatherChestplate.defense", 10);
-        itemDB.addDefault("leatherChestplate.mana", 10);
+        itemDB.addDefault("leatherChestplate.Health", 10);
+        itemDB.addDefault("leatherChestplate.Defence", 10);
+        itemDB.addDefault("leatherChestplate.Mana", 10);
         itemDB.addDefault("leatherChestplate.color", "10,10,10");
         itemDB.addDefault("leatherChestplate.recipe.type", "shapeless");
         itemDB.addDefault("leatherChestplate.recipe.ingredients", List.of("DIAMOND:5", "LEATHER:2", "BLACK_DYE:1"));
@@ -167,6 +172,7 @@ public class yamlManager {
             ItemStack item = ItemStack.of(itemType);
             ItemMeta meta = item.getItemMeta();
             List<String> lore = new ArrayList(List.of());
+            List<String> PDC = new ArrayList(List.of());
             int attributes = 0;
             if (isItemSet(name + ".hide")) {
                 for(Object hide : (List)itemDB.get(name + ".hide")) {
@@ -174,36 +180,14 @@ public class yamlManager {
                 }
             }
 
-            if (isItemSet(name + ".damage")) {
-                NamespacedKey key = new NamespacedKey(FableCraft.getPlugin(), name + ".damage");
-                meta.getPersistentDataContainer().set(key, PersistentDataType.INTEGER, (Integer)itemDB.get(name + ".damage"));
-                String var10001 = String.valueOf(itemDB.get(name + ".damage"));
-                lore.add("&8Damage: &f+" + var10001 + String.valueOf(getConfig("stats.Damage.char", (Player)null, true)));
-                ++attributes;
-            }
-
-            if (isItemSet(name + ".health")) {
-                NamespacedKey key = new NamespacedKey(FableCraft.getPlugin(), name + ".health");
-                meta.getPersistentDataContainer().set(key, PersistentDataType.INTEGER, (Integer)itemDB.get(name + ".health"));
-                String var39 = String.valueOf(itemDB.get(name + ".health"));
-                lore.add("&8Health: &f+" + var39 + String.valueOf(getConfig("stats.Health.char", (Player)null, true)));
-                ++attributes;
-            }
-
-            if (isItemSet(name + ".mana")) {
-                NamespacedKey key = new NamespacedKey(FableCraft.getPlugin(), name + ".mana");
-                meta.getPersistentDataContainer().set(key, PersistentDataType.INTEGER, (Integer)itemDB.get(name + ".mana"));
-                String var40 = String.valueOf(itemDB.get(name + ".mana"));
-                lore.add("&8Damage: &f+" + var40 + String.valueOf(getConfig("stats.Mana.char", (Player)null, true)));
-                ++attributes;
-            }
-
-            if (isItemSet(name + ".defence")) {
-                NamespacedKey key = new NamespacedKey(FableCraft.getPlugin(), name + ".defence");
-                meta.getPersistentDataContainer().set(key, PersistentDataType.INTEGER, (Integer)itemDB.get(name + ".defence"));
-                String var41 = String.valueOf(itemDB.get(name + ".defence"));
-                lore.add("&8Defence: &f+" + var41 + String.valueOf(getConfig("stats.Defence.char", (Player)null, true)));
-                ++attributes;
+            for(String s : FableCraft.itemStats){
+                if (isItemSet(name + "." + s)) {
+                    String var41 = String.valueOf(itemDB.get(name + "." + s));
+                    lore.add("&8" + s + ": &f+" + var41 + getConfig("stats." + s + ".char", null, true));
+                    ++attributes;
+                    PDC.add(s + ";" + itemDB.get(name + "." + s));
+                    //item = stats.setItemPDC(s, item, itemDB.get(name + "." + s));
+                }
             }
 
             if (attributes != 0) {
@@ -276,15 +260,20 @@ public class yamlManager {
                 }
             }
 
+            if (itemDB.get(name + ".recipe.permission") != null){
+                String permission = (String) itemDB.get(name + ".recipe.permission");
+                //item = stats.setItemPDC(, item, permission);
+                PDC.add("craftPerms;" + permission);
+            }
             if (Bukkit.getRecipesFor(item).isEmpty() && isItemSet(name + ".recipe.type")) {
                 if (itemDB.get(name + ".recipe.type").toString().toLowerCase(Locale.ROOT).equals("shaped")) {
                     NamespacedKey key = new NamespacedKey(FableCraft.getPlugin(), name);
                     ShapedRecipe recipe = new ShapedRecipe(key, item);
                     List<String> shapeString = (List)itemDB.get(name + ".recipe.shape");
-                    String[] shapes = (String[])shapeString.toArray(new String[shapeString.size()]);
+                    String[] shapes = shapeString.toArray(new String[shapeString.size()]);
                     recipe.shape(shapes);
 
-                    for(Object s : (List)itemDB.get(name + ".recipe.ingredients")) {
+                    for(Object s : (List) Objects.requireNonNull(itemDB.get(name + ".recipe.ingredients"))) {
                         String[] splitIngredients = s.toString().split(":", 2);
                         recipe.setIngredient(splitIngredients[0].charAt(0), Material.getMaterial(splitIngredients[1]));
                     }
@@ -301,6 +290,11 @@ public class yamlManager {
 
                     Bukkit.getServer().addRecipe(recipe);
                 }
+            }
+
+            for (String s : PDC){
+                String[] values = s.split(";");
+                stats.setItemPDC(values[0], item, values[1]);
             }
 
             return item;
@@ -326,30 +320,46 @@ public class yamlManager {
 
             for(String m : msgs) {
                 if (m.equals("target")) {
-                    msgs[count] = msgs[count].replace(m, target.getName());
+                    msgs[count] = msgs[count].replaceAll(m, target.getName());
+                    msgs[count] = msgs[count].replaceAll("\\s","");
                 } else if (m.equals("maxHealth")) {
                     if (!round) {
-                        msgs[count] = msgs[count].replace(m, stats.getPlayerPDC("Health", target));
+                        msgs[count] = msgs[count].replaceAll(m, stats.getPlayerPDC("Health", target));
                     } else {
-                        msgs[count] = msgs[count].replace(m, String.valueOf(Math.round(Double.parseDouble(stats.getPlayerPDC("Health", target)))));
+                        msgs[count] = msgs[count].replaceAll(m, String.valueOf(Math.round(Double.parseDouble(stats.getPlayerPDC("Health", target)))));
                     }
+                    msgs[count] = msgs[count].replaceAll("\\s","");
                 } else if (m.equals("currentHealth")) {
                     if (!round) {
-                        msgs[count] = msgs[count].replace(m, ((MetadataValue)target.getMetadata("currentHealth").getFirst()).asString());
+                        msgs[count] = msgs[count].replaceAll(m, target.getMetadata("currentHealth").getFirst().asString());
                     } else {
-                        msgs[count] = msgs[count].replace(m, String.valueOf(Math.round(((MetadataValue)target.getMetadata("currentHealth").getFirst()).asFloat())));
+                        msgs[count] = msgs[count].replaceAll(m, String.valueOf(Math.round(target.getMetadata("currentHealth").getFirst().asFloat())));
                     }
+                    msgs[count] = msgs[count].replaceAll("\\s","");
+                } else if (m.equals("maxMana")) {
+                    if (!round) {
+                        msgs[count] = msgs[count].replaceAll(m, stats.getPlayerPDC("Mana", target));
+                    } else {
+                        msgs[count] = msgs[count].replaceAll(m, String.valueOf(Math.round(Double.parseDouble(stats.getPlayerPDC("Mana", target)))));
+                    }
+                    msgs[count] = msgs[count].replaceAll("\\s","");
+                } else if (m.equals("currentMana")) {
+                    if (!round) {
+                        msgs[count] = msgs[count].replaceAll(m, target.getMetadata("currentMana").getFirst().asString());
+                    } else {
+                        msgs[count] = msgs[count].replaceAll(m, String.valueOf(Math.round(target.getMetadata("currentMana").getFirst().asFloat())));
+                    }
+                    msgs[count] = msgs[count].replaceAll("\\s","");
                 }
 
                 ++count;
             }
 
-            String finalMsg = Arrays.toString(msgs);
-            finalMsg = finalMsg.replace("#", "");
+            String finalMsg = String.join("", msgs);
+            finalMsg = finalMsg.replaceAll("#", "");
+            finalMsg = finalMsg.replaceAll(",", "");
             finalMsg = finalMsg.replace("[", "");
             finalMsg = finalMsg.replace("]", "");
-            finalMsg = finalMsg.replace(",", "");
-            finalMsg = finalMsg.replace("  ", " ");
             return ChatColor.translateAlternateColorCodes('&', finalMsg);
         } else {
             return a;
@@ -363,5 +373,14 @@ public class yamlManager {
         } catch (NullPointerException var2) {
             return List.of();
         }
+    } public static List<String> getDataNodes(String path) {
+        try {
+            Set<String> nodes = data.getConfigurationSection(path).getKeys(false);
+            return new ArrayList(nodes);
+        } catch (NullPointerException var2) {
+            return List.of();
+        }
+    } public static Object getData(String path) {
+        return data.get(path);
     }
 }
