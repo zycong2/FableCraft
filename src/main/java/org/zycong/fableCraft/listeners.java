@@ -1,5 +1,4 @@
-
-package org.zycong.fableCraft;
+ package org.zycong.fableCraft;
 
 import com.destroystokyo.paper.event.player.PlayerArmorChangeEvent;
 import java.util.List;
@@ -15,13 +14,11 @@ import org.bukkit.event.block.Action;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityRegainHealthEvent;
 import org.bukkit.event.entity.FoodLevelChangeEvent;
+import org.bukkit.event.inventory.CraftItemEvent;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.event.inventory.InventoryDragEvent;
-import org.bukkit.event.player.PlayerInteractEvent;
-import org.bukkit.event.player.PlayerItemDamageEvent;
-import org.bukkit.event.player.PlayerJoinEvent;
-import org.bukkit.event.player.PlayerQuitEvent;
+import org.bukkit.event.player.*;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
@@ -45,7 +42,7 @@ public class listeners implements Listener {
             event.setJoinMessage((String)yamlManager.getConfig("messages.firstJoinMessage", p, true));
         }
 
-        String[] skills = (String[])yamlManager.getConfigNodes("stats").toArray(new String[0]);
+        String[] skills = yamlManager.getConfigNodes("stats").toArray(new String[0]);
 
         for(String skill : skills) {
             if (stats.getPlayerPDC(skill, p) == null) {
@@ -55,9 +52,18 @@ public class listeners implements Listener {
 
         if (stats.getPlayerPDC("currentHealth", p) == null) {
             p.setMetadata("currentHealth", new FixedMetadataValue(FableCraft.getPlugin(), yamlManager.getConfig("stats.Health.default", p, true).toString()));
+            stats.setPlayerPDC("Health", p, yamlManager.getConfig("stats.Health.default", p, true).toString());
         } else {
             p.setMetadata("currentHealth", new FixedMetadataValue(FableCraft.getPlugin(), stats.getPlayerPDC("currentHealth", p)));
         }
+        if (stats.getPlayerPDC("currentMana", p) == null) {
+            p.setMetadata("currentMana", new FixedMetadataValue(FableCraft.getPlugin(), yamlManager.getConfig("stats.Mana.default", p, true).toString()));
+            stats.setPlayerPDC("Mana", p, yamlManager.getConfig("stats.Mana.default", p, true).toString());
+        } else {
+            p.setMetadata("currentMana", new FixedMetadataValue(FableCraft.getPlugin(), stats.getPlayerPDC("currentMana", p)));
+        }
+
+        stats.checkCurrentStats(p);
 
     }
 
@@ -107,7 +113,7 @@ public class listeners implements Listener {
             if (event.getRawSlot() == 39) {
                 int page = 0;
                 if (!p.getMetadata("itemDBPage").isEmpty()) {
-                    page = ((MetadataValue)p.getMetadata("itemDBPage").getFirst()).asInt();
+                    page = p.getMetadata("itemDBPage").getFirst().asInt();
                 }
 
                 if (page >= 1) {
@@ -119,7 +125,7 @@ public class listeners implements Listener {
             } else if (event.getRawSlot() == 41) {
                 int page = 0;
                 if (!p.getMetadata("itemDBPage").isEmpty()) {
-                    page = ((MetadataValue)p.getMetadata("itemDBPage").getFirst()).asInt();
+                    page = p.getMetadata("itemDBPage").getFirst().asInt();
                 }
 
                 List<ItemStack> items = yamlManager.getCustomItems();
@@ -130,10 +136,24 @@ public class listeners implements Listener {
                 p.setMetadata("itemDBPage", new FixedMetadataValue(FableCraft.getPlugin(), page));
                 p.openInventory(itemDB);
             } else if (!Objects.equals(event.getCurrentItem(), ItemStack.of(Material.AIR))) {
-                p.getInventory().addItem(new ItemStack[]{event.getCurrentItem()});
+                p.getInventory().addItem(event.getCurrentItem());
             }
         }
 
+    }
+
+    @EventHandler
+    public void CraftItem(CraftItemEvent event){
+        if (stats.getItemPDC("craftPerms", event.getCurrentItem()) != null){
+            if (!event.getWhoClicked().hasPermission(stats.getItemPDC("craftPerms", event.getCurrentItem()))){
+                event.setCancelled(true);
+                event.getWhoClicked().sendMessage(yamlManager.getConfig("messages.error.noPermissionCraft", (Player) event.getWhoClicked(), false).toString());
+            } else{
+                Bukkit.getLogger().info("has permission");
+            }
+        } else{
+            Bukkit.getLogger().info("no pdc");
+        }
     }
 
     @EventHandler
@@ -150,7 +170,6 @@ public class listeners implements Listener {
         if (event.getInventory().equals(this.menu)) {
             event.setCancelled(true);
         }
-
     }
 
     @EventHandler
@@ -158,8 +177,8 @@ public class listeners implements Listener {
         if (event.getEntityType().equals(EntityType.PLAYER)) {
             Player p = (Player)event.getEntity();
             double maxPlayerHealth = Double.parseDouble(stats.getPlayerPDC("Health", p));
-            double currentHealth = ((MetadataValue)p.getMetadata("currentHealth").getFirst()).asDouble();
-            double playerDefense = Double.parseDouble(stats.getPlayerPDC("Defense", p));
+            double currentHealth = p.getMetadata("currentHealth").getFirst().asDouble();
+            double playerDefense = Double.parseDouble(stats.getPlayerPDC("Defence", p));
             double damage = event.getDamage() - playerDefense * (double)10.0F;
             currentHealth -= damage;
             p.setMetadata("currentHealth", new FixedMetadataValue(FableCraft.getPlugin(), currentHealth));
@@ -170,8 +189,13 @@ public class listeners implements Listener {
     }
 
     @EventHandler
+    public void onRespawn(PlayerRespawnEvent event){
+        event.getPlayer().setMetadata("currentHealth", new FixedMetadataValue(FableCraft.getPlugin(), Double.parseDouble(stats.getPlayerPDC("Health", event.getPlayer()))));
+    }
+
+    @EventHandler
     void onItemDamage(PlayerItemDamageEvent event) {
-        if (yamlManager.getConfig("items.unbreakable.enabled", (Player)null, false).equals(true)) {
+        if (yamlManager.getConfig("items.unbreakable.enabled", null, false).equals(true)) {
             event.setCancelled(true);
         }
 
@@ -195,6 +219,25 @@ public class listeners implements Listener {
 
     @EventHandler
     void onArmorChange(PlayerArmorChangeEvent event) {
+        //remove old effects if existent
+        Player p = event.getPlayer();
+        if (!event.getOldItem().equals(ItemStack.of(Material.AIR))){
+            for (String s : FableCraft.itemStats) {
+                if (stats.getItemPDC(s, event.getOldItem()) != null) {
+                    if (stats.getPlayerPDC("Health", p) != null) { stats.setPlayerPDC(s, p, String.valueOf(Double.parseDouble(stats.getPlayerPDC("Health", p)) - Double.valueOf(stats.getItemPDC(s, event.getOldItem()))));}
+
+                }
+            }
+        }
+        //add new effects
+        if (!event.getNewItem().equals(ItemStack.of(Material.AIR))){
+            for (String s : FableCraft.itemStats) {
+                if (stats.getItemPDC(s, event.getNewItem()) != null) {
+                    if (stats.getPlayerPDC("Health", p) != null) { stats.setPlayerPDC(s, p, String.valueOf(Double.parseDouble(stats.getPlayerPDC(s, p)) + Double.valueOf(stats.getItemPDC(s, event.getNewItem())))); }
+                }
+            }
+        }
+        stats.checkCurrentStats(p);
     }
 
     public static void itemDBMenu(Player p) {
@@ -210,13 +253,13 @@ public class listeners implements Listener {
         } else {
             int page = 0;
             if (p.getMetadata("itemDBPage").getFirst() != null) {
-                page = ((MetadataValue)p.getMetadata("itemDBPage").getFirst()).asInt();
+                page = p.getMetadata("itemDBPage").getFirst().asInt();
             } else {
                 p.setMetadata("itemDBPage", new FixedMetadataValue(FableCraft.getPlugin(), 0));
             }
 
             for(int i = 0; i <= 36; ++i) {
-                menu.setItem(i + 36 * page, (ItemStack)items.get(i + 36 * page));
+                menu.setItem(i + 36 * page, items.get(i + 36 * page));
             }
         }
 

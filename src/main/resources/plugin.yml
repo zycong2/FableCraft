@@ -11,3 +11,8 @@ commands:
     permission: FableCraft.itemDB
     aliases:
       - idb
+  resetStats:
+    description: Reset the stats of the specified player.
+    permission: FableCraft.resetStats
+    aliases:
+      - rs
