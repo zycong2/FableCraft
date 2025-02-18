@@ -11,7 +11,7 @@ import org.zycong.fableCraft.yamlManager;
 public class resetStats implements CommandExecutor {
     @Override
     public boolean onCommand(@NotNull CommandSender p, @NotNull Command command, @NotNull String s, @NotNull String[] args) {
-        if (!p.hasPermission("FableCraft.itemDB")) {
+        if (!p.hasPermission("FableCraft.resetStats")) {
             p.sendMessage((String)yamlManager.getConfig("messages.error.noPermission", (Player) p, true));
             return true;
         }if (args.length == 0 || Bukkit.getPlayer(args[0]) == null){

@@ -16,3 +16,13 @@ commands:
     permission: FableCraft.resetStats
     aliases:
       - rs
+  buildHelper:
+    description: Some tools for building
+    permission: FableCraft.build
+    aliases:
+      - bh
+  mobs:
+    description: Manage the custom mobs.
+    permission: FableCraft.mobs
+    aliases:
+      - m

@@ -34,7 +34,7 @@ public class listeners implements Listener {
     }
 
     @EventHandler
-    public void onJoin(PlayerJoinEvent event) {
+    void onJoin(PlayerJoinEvent event) {
         Player p = event.getPlayer();
         if (p.hasPlayedBefore()) {
             event.setJoinMessage((String)yamlManager.getConfig("messages.joinMessage", p, true));
@@ -68,7 +68,7 @@ public class listeners implements Listener {
     }
 
     @EventHandler
-    public void onQuit(PlayerQuitEvent event) {
+    void onQuit(PlayerQuitEvent event) {
         Player p = event.getPlayer();
         event.setQuitMessage((String)yamlManager.getConfig("messages.quitMessage", p, true));
         if (p.hasMetadata("currentHealth")) {
@@ -80,7 +80,7 @@ public class listeners implements Listener {
     }
 
     @EventHandler
-    public void onInteraction(PlayerInteractEvent event) {
+    void onInteraction(PlayerInteractEvent event) {
         if (event.getAction() == Action.RIGHT_CLICK_AIR && Objects.equals(event.getItem(), new ItemStack(Material.NETHER_STAR))) {
             this.menu = Bukkit.createInventory(event.getPlayer(), 45, "Menu");
             String[] skills = (String[])yamlManager.getConfigNodes("stats").toArray(new String[0]);
@@ -98,7 +98,7 @@ public class listeners implements Listener {
     }
 
     @EventHandler
-    public void onInventoryClick(InventoryClickEvent event) {
+    void onInventoryClick(InventoryClickEvent event) {
         Player p = (Player)event.getWhoClicked();
         if (event.getInventory().equals(this.menu)) {
             event.setCancelled(true);
@@ -143,7 +143,7 @@ public class listeners implements Listener {
     }
 
     @EventHandler
-    public void CraftItem(CraftItemEvent event){
+    void CraftItem(CraftItemEvent event){
         if (stats.getItemPDC("craftPerms", event.getCurrentItem()) != null){
             if (!event.getWhoClicked().hasPermission(stats.getItemPDC("craftPerms", event.getCurrentItem()))){
                 event.setCancelled(true);
@@ -157,7 +157,7 @@ public class listeners implements Listener {
     }
 
     @EventHandler
-    public void inventoryClose(InventoryCloseEvent event) {
+    void inventoryClose(InventoryCloseEvent event) {
         Player p = (Player)event.getPlayer();
         if (event.getInventory().equals(itemDB)) {
             p.removeMetadata("itemDBPage", FableCraft.getPlugin());
@@ -166,14 +166,14 @@ public class listeners implements Listener {
     }
 
     @EventHandler
-    public void onInventoryClick(InventoryDragEvent event) {
+    void onInventoryClick(InventoryDragEvent event) {
         if (event.getInventory().equals(this.menu)) {
             event.setCancelled(true);
         }
     }
 
     @EventHandler
-    public void onDamage(EntityDamageEvent event) {
+    void onDamage(EntityDamageEvent event) {
         if (event.getEntityType().equals(EntityType.PLAYER)) {
             Player p = (Player)event.getEntity();
             double maxPlayerHealth = Double.parseDouble(stats.getPlayerPDC("Health", p));
@@ -185,37 +185,12 @@ public class listeners implements Listener {
             double scaledHealth = (double)20.0F / maxPlayerHealth * damage;
             event.setDamage(Math.abs(scaledHealth));
         }
-
     }
 
-    @EventHandler
-    public void onRespawn(PlayerRespawnEvent event){
-        event.getPlayer().setMetadata("currentHealth", new FixedMetadataValue(FableCraft.getPlugin(), Double.parseDouble(stats.getPlayerPDC("Health", event.getPlayer()))));
-    }
-
-    @EventHandler
-    void onItemDamage(PlayerItemDamageEvent event) {
-        if (yamlManager.getConfig("items.unbreakable.enabled", null, false).equals(true)) {
-            event.setCancelled(true);
-        }
-
-    }
-
-    @EventHandler
-    void onRegenerate(EntityRegainHealthEvent event) {
-        if (event.getEntityType().equals(EntityType.PLAYER)) {
-            event.setCancelled(true);
-        }
-
-    }
-
-    @EventHandler
-    void onHungerLoss(FoodLevelChangeEvent event) {
-        if (event.getEntityType().equals(EntityType.PLAYER)) {
-            event.setCancelled(true);
-        }
-
-    }
+    @EventHandler void onRespawn(PlayerRespawnEvent event){ event.getPlayer().setMetadata("currentHealth", new FixedMetadataValue(FableCraft.getPlugin(), Double.parseDouble(stats.getPlayerPDC("Health", event.getPlayer()))));}
+    @EventHandler void onItemDamage(PlayerItemDamageEvent event) { if (yamlManager.getConfig("items.unbreakable.enabled", null, false).equals(true)) { event.setCancelled(true); } }
+    @EventHandler void onRegenerate(EntityRegainHealthEvent event) { if (event.getEntityType().equals(EntityType.PLAYER)) { event.setCancelled(true); } }
+    @EventHandler void onHungerLoss(FoodLevelChangeEvent event) { if (event.getEntityType().equals(EntityType.PLAYER) && (boolean) yamlManager.getConfig("food.removeHunger", null, true)) { event.setCancelled(true); }}
 
     @EventHandler
     void onArmorChange(PlayerArmorChangeEvent event) {
@@ -224,7 +199,7 @@ public class listeners implements Listener {
         if (!event.getOldItem().equals(ItemStack.of(Material.AIR))){
             for (String s : FableCraft.itemStats) {
                 if (stats.getItemPDC(s, event.getOldItem()) != null) {
-                    if (stats.getPlayerPDC("Health", p) != null) { stats.setPlayerPDC(s, p, String.valueOf(Double.parseDouble(stats.getPlayerPDC("Health", p)) - Double.valueOf(stats.getItemPDC(s, event.getOldItem()))));}
+                    if (stats.getPlayerPDC(s, p) != null) { stats.setPlayerPDC(s, p, String.valueOf(Double.parseDouble(stats.getPlayerPDC(s, p)) - Double.valueOf(stats.getItemPDC(s, event.getOldItem()))));}
 
                 }
             }
@@ -233,12 +208,38 @@ public class listeners implements Listener {
         if (!event.getNewItem().equals(ItemStack.of(Material.AIR))){
             for (String s : FableCraft.itemStats) {
                 if (stats.getItemPDC(s, event.getNewItem()) != null) {
-                    if (stats.getPlayerPDC("Health", p) != null) { stats.setPlayerPDC(s, p, String.valueOf(Double.parseDouble(stats.getPlayerPDC(s, p)) + Double.valueOf(stats.getItemPDC(s, event.getNewItem())))); }
+                    if (stats.getPlayerPDC(s, p) != null) { stats.setPlayerPDC(s, p, String.valueOf(Double.parseDouble(stats.getPlayerPDC(s, p)) + Double.valueOf(stats.getItemPDC(s, event.getNewItem())))); }
                 }
             }
         }
         stats.checkCurrentStats(p);
     }
+
+    @EventHandler
+    void onHoldChange(PlayerItemHeldEvent event){
+
+        //remove old effects if existent
+        Player p = event.getPlayer();
+        ItemStack oldItem = p.getInventory().getItem(event.getPreviousSlot());
+        ItemStack newItem = p.getInventory().getItem(event.getNewSlot());
+
+        if (oldItem != null) { if (!oldItem.equals(ItemStack.of(Material.AIR))){
+            for (String s : FableCraft.itemStats) {
+                if (stats.getItemPDC(s, oldItem) != null) {
+                    if (stats.getPlayerPDC(s, p) != null) { stats.setPlayerPDC(s, p, String.valueOf(Double.parseDouble(stats.getPlayerPDC(s, p)) - Double.valueOf(stats.getItemPDC(s, oldItem))));}
+                }
+            }
+        } }
+        //add new effects
+        if (newItem != null) { if (!newItem.equals(ItemStack.of(Material.AIR))){
+            for (String s : FableCraft.itemStats) {
+                if (stats.getItemPDC(s, newItem) != null) {
+                    if (stats.getPlayerPDC(s, p) != null) { stats.setPlayerPDC(s, p, String.valueOf(Double.parseDouble(stats.getPlayerPDC(s, p)) + Double.valueOf(stats.getItemPDC(s, newItem)))); }
+                }
+            }
+        }
+        stats.checkCurrentStats(p);
+    } }
 
     public static void itemDBMenu(Player p) {
         Inventory menu = Bukkit.createInventory(p, 45, "ItemDB");

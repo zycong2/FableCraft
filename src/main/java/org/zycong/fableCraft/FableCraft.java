@@ -4,6 +4,7 @@ import java.util.Arrays;
 import java.util.List;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
+import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
@@ -13,7 +14,13 @@ import org.bukkit.metadata.MetadataValue;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitScheduler;
+import org.zycong.fableCraft.buildHelpers.buildHelper;
+import org.zycong.fableCraft.buildHelpers.buildHelperTC;
+import org.zycong.fableCraft.buildHelpers.buildListeners;
 import org.zycong.fableCraft.commands.itemDBCommand;
+import org.zycong.fableCraft.mobs.mobListeners;
+import org.zycong.fableCraft.mobs.mobsCommand;
+import org.zycong.fableCraft.mobs.mobsCommandTC;
 import org.zycong.fableCraft.playerStats.resetStats;
 import org.zycong.fableCraft.playerStats.resetStatsTC;
 import org.zycong.fableCraft.playerStats.stats;
@@ -30,8 +37,15 @@ public final class FableCraft extends JavaPlugin {
         this.getCommand("itemDB").setExecutor(new itemDBCommand());
         this.getCommand("resetStats").setExecutor(new resetStats());
         this.getCommand("resetStats").setTabCompleter(new resetStatsTC());
+        this.getCommand("buildHelper").setExecutor(new buildHelper());
+        this.getCommand("buildHelper").setTabCompleter(new buildHelperTC());
+        this.getCommand("mobs").setExecutor(new mobsCommand());
+        this.getCommand("mobs").setTabCompleter(new mobsCommandTC());
 
         Bukkit.getPluginManager().registerEvents(new listeners(), getPlugin());
+        Bukkit.getPluginManager().registerEvents(new buildListeners(), getPlugin());
+        Bukkit.getPluginManager().registerEvents(new mobListeners(), getPlugin());
+
         BukkitScheduler scheduler = this.getServer().getScheduler();
         scheduler.scheduleSyncRepeatingTask(this, () -> {
             for(Player p : Bukkit.getOnlinePlayers()) {
