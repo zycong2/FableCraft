@@ -6,11 +6,13 @@ import java.util.Objects;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
+import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityRegainHealthEvent;
 import org.bukkit.event.entity.FoodLevelChangeEvent;
@@ -83,7 +85,7 @@ public class listeners implements Listener {
     void onInteraction(PlayerInteractEvent event) {
         if (event.getAction() == Action.RIGHT_CLICK_AIR && Objects.equals(event.getItem(), new ItemStack(Material.NETHER_STAR))) {
             this.menu = Bukkit.createInventory(event.getPlayer(), 45, "Menu");
-            String[] skills = (String[])yamlManager.getConfigNodes("stats").toArray(new String[0]);
+            String[] skills = yamlManager.getConfigNodes("stats").toArray(new String[0]);
             String[] formatedSkills = new String[skills.length];
 
             for(int i = 0; i < skills.length; ++i) {
@@ -94,7 +96,6 @@ public class listeners implements Listener {
             this.menu.setItem(4, FableCraft.createGuiHead(event.getPlayer(), "Profile", formatedSkills));
             event.getPlayer().openInventory(this.menu);
         }
-
     }
 
     @EventHandler
@@ -184,6 +185,8 @@ public class listeners implements Listener {
             p.setMetadata("currentHealth", new FixedMetadataValue(FableCraft.getPlugin(), currentHealth));
             double scaledHealth = (double)20.0F / maxPlayerHealth * damage;
             event.setDamage(Math.abs(scaledHealth));
+        } else if (event instanceof EntityDamageByEntityEvent entityEvent && entityEvent.getDamager() instanceof Player p) {
+            event.setDamage(event.getDamage() + Double.valueOf(stats.getPlayerPDC("Damage", p)));
         }
     }
 

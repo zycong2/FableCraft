@@ -31,12 +31,7 @@ public class mobsCommand implements CommandExecutor {
             p.sendMessage(yamlManager.getConfig("messages.error.noValidArgument", null, true).toString());
             return true;
         }
-
         if (args[0].equals("spawn")) { getEntity(args[1], p); }
-
-
-
-
         return true;
     }
 
@@ -44,7 +39,7 @@ public class mobsCommand implements CommandExecutor {
         EntityType entityType = EntityType.valueOf((String) mobDB.get(name + ".type"));
         if (!entityType.isSpawnable()) {
             String var42 = String.valueOf(mobDB.get(name + ".itemType"));
-            Bukkit.getLogger().severe("Could not spawn entity type " + var42 + " " + name);
+            Bukkit.getLogger().severe("Could not find entity type " + var42 + " " + name);
             return null;
         } else {
             Entity entity=p.getWorld().spawnEntity(p.getLocation(), entityType);
@@ -65,6 +60,10 @@ public class mobsCommand implements CommandExecutor {
             if (mobDB.get(name + ".customName.name") != null) { entity.customName(Component.text(setPlaceholders((String) mobDB.get(name + ".customName.name"), true, entity))); }
             if (mobDB.get(name + ".customName.visible").equals(true)) { entity.setCustomNameVisible(true); }
             else { entity.setCustomNameVisible(false); }
+
+            if (mobDB.get(name + ".lootTable") != null) { stats.setEntityPDC("lootTable", LE, (String) mobDB.get(name + ".lootTable")); }
+
+
 
             stats.setEntityPDC("type", LE, name);
             return LE;

@@ -23,6 +23,7 @@ import org.bukkit.inventory.ShapelessRecipe;
 import org.bukkit.inventory.meta.BookMeta;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.LeatherArmorMeta;
+import org.yaml.snakeyaml.Yaml;
 import org.zycong.fableCraft.playerStats.stats;
 
 public class yamlManager {
@@ -34,6 +35,8 @@ public class yamlManager {
     public static File ifile;
     public static FileConfiguration mobDB;
     public static File mfile;
+    public static FileConfiguration lootTables;
+    public static File lfile;
 
     public yamlManager() {
     }
@@ -43,12 +46,14 @@ public class yamlManager {
         cfile = new File(FableCraft.getPlugin().getDataFolder().getAbsolutePath(), "config.yml");
         ifile = new File(FableCraft.getPlugin().getDataFolder().getAbsolutePath(), "item.yml");
         mfile = new File(FableCraft.getPlugin().getDataFolder().getAbsolutePath(), "mob.yml");
+        lfile = new File(FableCraft.getPlugin().getDataFolder().getAbsolutePath(), "LootTables.yml");
         cfile.getParentFile().mkdirs();
         config = FableCraft.getPlugin().getConfig();
         data = new YamlConfiguration();
         itemDB = new YamlConfiguration();
         mobDB = new YamlConfiguration();
-        if (dfile.exists() && cfile.exists() && ifile.exists() && mfile.exists()) {
+        lootTables = new YamlConfiguration();
+        if (dfile.exists() && cfile.exists() && ifile.exists() && mfile.exists() && lfile.exists()) {
             return true;
         } else {
             try {
@@ -56,6 +61,7 @@ public class yamlManager {
                 cfile.createNewFile();
                 ifile.createNewFile();
                 mfile.createNewFile();
+                lfile.createNewFile();
                 setDefaults();
                 return true;
             } catch (IOException var1) {
@@ -69,12 +75,14 @@ public class yamlManager {
         cfile = new File(FableCraft.getPlugin().getDataFolder().getAbsolutePath(), "config.yml");
         ifile = new File(FableCraft.getPlugin().getDataFolder().getAbsolutePath(), "item.yml");
         mfile = new File(FableCraft.getPlugin().getDataFolder().getAbsolutePath(), "mob.yml");
+        lfile = new File(FableCraft.getPlugin().getDataFolder().getAbsolutePath(), "LootTables.yml");
 
         try {
             data.save(dfile);
             config.save(cfile);
             itemDB.save(ifile);
             mobDB.save(mfile);
+            lootTables.save(lfile);
             return true;
         } catch (IOException var1) {
             return false;
@@ -86,11 +94,13 @@ public class yamlManager {
         cfile = new File(FableCraft.getPlugin().getDataFolder().getAbsolutePath(), "config.yml");
         ifile = new File(FableCraft.getPlugin().getDataFolder().getAbsolutePath(), "item.yml");
         mfile = new File(FableCraft.getPlugin().getDataFolder().getAbsolutePath(), "mob.yml");
-        if (dfile.exists() && cfile.exists() && ifile.exists() && mfile.exists()) {
+        lfile = new File(FableCraft.getPlugin().getDataFolder().getAbsolutePath(), "LootTables.yml");
+        if (dfile.exists() && cfile.exists() && ifile.exists() && mfile.exists() && lfile.exists()) {
             data = YamlConfiguration.loadConfiguration(dfile);
             config = YamlConfiguration.loadConfiguration(cfile);
             itemDB = YamlConfiguration.loadConfiguration(ifile);
             mobDB = YamlConfiguration.loadConfiguration(mfile);
+            lootTables = YamlConfiguration.loadConfiguration(lfile);
             return true;
         } else {
             return defaultConfig();
@@ -162,9 +172,9 @@ public class yamlManager {
         itemDB.addDefault("customBook.title", "title");
         itemDB.addDefault("customBook.author", "author");
         itemDB.addDefault("customBook.pages", List.of("Page1", "Page2\nwith an enter"));
-        itemDB.addDefault("customBook.itemType", "BREAD");
-        itemDB.addDefault("customBook.group", "food");
-        itemDB.addDefault("customBook.nutrition", 5);
+        itemDB.addDefault("customBread.itemType", "BREAD");
+        itemDB.addDefault("customBread.group", "food");
+        itemDB.addDefault("customBread.nutrition", 5);
         itemDB.options().copyDefaults(true);
 
         mobDB.addDefault("spider.type", "SPIDER");
@@ -173,13 +183,23 @@ public class yamlManager {
         mobDB.addDefault("spider.glowing", false);
         mobDB.addDefault("spider.invulnerable", false);
         mobDB.setComments("spider.health", List.of("If you want a higher value then 2048 you need to change the max health in the spigot.yml file (option: settings.attribute.maxHealth)"));
-        mobDB.addDefault("spider.health", 10000);
+        mobDB.addDefault("spider.health", 100);
         mobDB.setComments("spider.damage", List.of("If you want a higher value then 2048 you need to change the max health in the spigot.yml file (option: settings.attribute.maxHealth)"));
         mobDB.addDefault("spider.damage", 10);
         mobDB.setComments("spider.speed", List.of("If you want a higher value then 2048 you need to change the max health in the spigot.yml file (option: settings.attribute.maxHealth)"));
         mobDB.addDefault("spider.speed", 2);
-
+        mobDB.addDefault("spider.lootTable", "spiderDrops");
         mobDB.options().copyDefaults(true);
+        mobDB.options().parseComments();
+
+
+        lootTables.addDefault("spiderDrops.maxItems", 10);
+        lootTables.addDefault("spiderDrops.minItems", 1);
+        lootTables.addDefault("spiderDrops.items", List.of("STRING:1:5:9", "customBook:1:4:1"));
+        lootTables.setComments("spiderDrops.items", List.of("First number: minimal amount of item (default 1)", "Second number: maximal amount of item", "Third number: weight of the item (default 1)"));
+
+        lootTables.options().copyDefaults(true);
+        lootTables.options().parseComments();
         saveData();
     }
 
@@ -451,5 +471,37 @@ public class yamlManager {
         }
     } public static Object getData(String path) {
         return data.get(path);
+    }
+
+    public static List<String> getMobNodes(String path) {
+        try {
+            Set<String> nodes = mobDB.getConfigurationSection(path).getKeys(false);
+            return new ArrayList(nodes);
+        } catch (NullPointerException var2) {
+            return List.of();
+        }
+    }
+
+    public static List<String> getLootTableNodes(String path) {
+        try {
+            Set<String> nodes = lootTables.getConfigurationSection(path).getKeys(false);
+            return new ArrayList(nodes);
+        } catch (NullPointerException var2) {
+            return List.of();
+        }
+    }
+
+    public static Object getLootTableData(String path) {
+        Object a = lootTables.get(path);
+        return Objects.requireNonNullElseGet(a, () -> ChatColor.translateAlternateColorCodes('&', "&cOption not found"));
+    }
+
+    public static List<String> getItemNodes(String path) {
+        try {
+            Set<String> nodes = itemDB.getConfigurationSection(path).getKeys(false);
+            return new ArrayList(nodes);
+        } catch (NullPointerException var2) {
+            return List.of();
+        }
     }
 }
