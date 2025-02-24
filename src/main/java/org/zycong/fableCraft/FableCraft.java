@@ -30,12 +30,15 @@ import org.zycong.fableCraft.commands.itemDBCommand;
 import org.zycong.fableCraft.mobs.mobListeners;
 import org.zycong.fableCraft.mobs.mobsCommand;
 import org.zycong.fableCraft.mobs.mobsCommandTC;
+import org.zycong.fableCraft.mobs.mobsHelper;
 import org.zycong.fableCraft.playerStats.resetStats;
 import org.zycong.fableCraft.playerStats.resetStatsTC;
 import org.zycong.fableCraft.playerStats.stats;
 
 public final class FableCraft extends JavaPlugin {
     public static List<String> itemStats = List.of("Damage", "Health", "Mana", "Defence");
+    public static List<LivingEntity> customMobs = new java.util.ArrayList<>(List.of());
+    public static List<String> spawns = new java.util.ArrayList<>(List.of());
     public FableCraft() {
     }
 
@@ -83,10 +86,12 @@ public final class FableCraft extends JavaPlugin {
 
         if (yamlManager.getConfig("items.removeDefaultRecipes", null, false).equals(true)) {Bukkit.clearRecipes();} else {Bukkit.resetRecipes();}
         yamlManager.getCustomItems();
+        mobsHelper.reloadSpawns();
 
     }
 
     public void onDisable() {
+        yamlManager.data.set("customMobs", customMobs);
         if (!yamlManager.saveData()) {
             Bukkit.getLogger().severe("Failed to save data!");
         }

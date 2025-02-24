@@ -9,7 +9,6 @@ import org.bukkit.metadata.FixedMetadataValue;
 import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
 import org.zycong.fableCraft.FableCraft;
-import org.zycong.fableCraft.yamlManager;
 
 public class stats {
     public stats() {
@@ -27,12 +26,11 @@ public class stats {
     }
 
 
-    public static ItemStack setItemPDC(String keyString, ItemStack i, Object data) {
+    public static void setItemPDC(String keyString, ItemStack i, Object data) {
         NamespacedKey key = new NamespacedKey(FableCraft.getPlugin(), keyString);
         ItemMeta meta = i.getItemMeta();
         meta.getPersistentDataContainer().set(key, PersistentDataType.STRING, data.toString());
         i.setItemMeta(meta);
-        return i;
     }
 
     public static String getItemPDC(String keyString, ItemStack i) {

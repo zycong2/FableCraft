@@ -101,6 +101,7 @@ public class yamlManager {
             itemDB = YamlConfiguration.loadConfiguration(ifile);
             mobDB = YamlConfiguration.loadConfiguration(mfile);
             lootTables = YamlConfiguration.loadConfiguration(lfile);
+            FableCraft.customMobs = (List<LivingEntity>) yamlManager.data.get("customMobs");
             return true;
         } else {
             return defaultConfig();
@@ -119,6 +120,7 @@ public class yamlManager {
         config.addDefault("messages.info.randomItems.disabled", "&aDisabled random items!");
         config.addDefault("messages.info.perlinCylSuccess", "&aSuccessfully made a perlin cylinder!");
         config.addDefault("food.removeHunger", true);
+        config.addDefault("mobs.removeAllVanillaSpawning", true);
         config.addDefault("items.unbreakable.enabled", true);
         config.addDefault("items.removeDefaultRecipes", true);
         config.addDefault("items.display.rarity.common", "&f&lCOMMON");
@@ -182,24 +184,30 @@ public class yamlManager {
         mobDB.addDefault("spider.customName.visible", true);
         mobDB.addDefault("spider.glowing", false);
         mobDB.addDefault("spider.invulnerable", false);
-        mobDB.setComments("spider.health", List.of("If you want a higher value then 2048 you need to change the max health in the spigot.yml file (option: settings.attribute.maxHealth)"));
+        mobDB.setInlineComments("spider.health", List.of("If you want a higher value then 2048 you need to change the max health in the spigot.yml file (option: settings.attribute.maxHealth)"));
         mobDB.addDefault("spider.health", 100);
-        mobDB.setComments("spider.damage", List.of("If you want a higher value then 2048 you need to change the max health in the spigot.yml file (option: settings.attribute.maxHealth)"));
+        mobDB.setInlineComments("spider.damage", List.of("If you want a higher value then 2048 you need to change the max health in the spigot.yml file (option: settings.attribute.maxHealth)"));
         mobDB.addDefault("spider.damage", 10);
-        mobDB.setComments("spider.speed", List.of("If you want a higher value then 2048 you need to change the max health in the spigot.yml file (option: settings.attribute.maxHealth)"));
+        mobDB.setInlineComments("spider.speed", List.of("If you want a higher value then 2048 you need to change the max health in the spigot.yml file (option: settings.attribute.maxHealth)"));
         mobDB.addDefault("spider.speed", 2);
         mobDB.addDefault("spider.lootTable", "spiderDrops");
+        mobDB.addDefault("spider.randomSpawns.frequency", 1);
+        mobDB.setInlineComments("spider.randomSpawns.frequency", List.of("0 is 0% of entities, 1 is 100%, 0.01 is 1% etc"));
+        mobDB.addDefault("spider.randomSpawns.options.spawnOn", List.of("GRASS_BLOCK"));
+        mobDB.addDefault("spider.randomSpawns.options.biomes", List.of("PLAINS", "FOREST"));
         mobDB.options().copyDefaults(true);
-        mobDB.options().parseComments();
 
 
         lootTables.addDefault("spiderDrops.maxItems", 10);
         lootTables.addDefault("spiderDrops.minItems", 1);
         lootTables.addDefault("spiderDrops.items", List.of("STRING:1:5:9", "customBook:1:4:1"));
-        lootTables.setComments("spiderDrops.items", List.of("First number: minimal amount of item (default 1)", "Second number: maximal amount of item", "Third number: weight of the item (default 1)"));
+        lootTables.setInlineComments("spiderDrops.items", List.of("First number: minimal amount of item (default 1)", "Second number: maximal amount of item", "Third number: weight of the item (default 1)"));
 
         lootTables.options().copyDefaults(true);
-        lootTables.options().parseComments();
+
+        data.addDefault("customMobs", List.of());
+        data.options().copyDefaults(true);
+
         saveData();
     }
 
